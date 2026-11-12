@@ -1,0 +1,2 @@
+# nomadcraft
+Nomadcraft SMP website

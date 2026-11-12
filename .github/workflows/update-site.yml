@@ -46,6 +46,8 @@ jobs:
             set sftp:auto-confirm yes;
             set net:max-retries 2;
             set ftp:passive-mode on;
+            cls -l --sort=date default/World/players/stats/ profile_yhsfd/World/players/stats/ default/usercache.json profile_yhsfd/usercache.json;
+            cls -l profile_yhsfd/;
             mirror --no-perms default/World/players/stats mc/stats;
             mirror --no-perms default/World/players/advancements mc/advancements;
             get default/usercache.json -o mc/usercache.json;

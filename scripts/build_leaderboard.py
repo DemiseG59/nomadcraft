@@ -111,7 +111,7 @@ def main():
         adv = load(os.path.join(a.mc, "advancements", fn), {}) or {}
         adv_list = []
         for k, v in adv.items():
-            if not isinstance(v, dict) or not v.get("done") or ":recipes/" in k or k.endswith("/root"):
+            if not isinstance(v, dict) or not v.get("done") or not k.startswith("minecraft:") or ":recipes/" in k or k.endswith("/root"):
                 continue
             t = adv_time(v)
             adv_list.append({"id": strip(k), "title": pretty(k), "time": t.isoformat() if t else None})

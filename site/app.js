@@ -9,81 +9,28 @@
     { key: "mob_kills", label: "Mob kills", unit: "" },
     { key: "player_kills", label: "Player kills", unit: "" },
     { key: "deaths", label: "Deaths", unit: "" },
+    { key: "blocks_placed", label: "Blocks placed", unit: "" },
+    { key: "blocks_mined", label: "Blocks mined", unit: "" },
+    { key: "villager_trades", label: "Villager trades", unit: "" },
+    { key: "elytra_km", label: "Elytra distance", unit: "km", digits: 1 },
+    { key: "fish_caught", label: "Fish caught", unit: "" },
+    { key: "items_crafted", label: "Items crafted", unit: "" },
     { key: "advancements", label: "Advancements", unit: "" },
     { key: "distance_km", label: "Distance", unit: "km", digits: 1 }
   ];
   let current = "playtime_hours";
   let players = [];
+  let autoTimeline = [];
+  let manualEvents = [];
   try { const s = localStorage.getItem("nc_tab"); if (STATS.some((x) => x.key === s)) current = s; } catch (e) {}
+
+  const fmt = (v, digits) => (Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: digits || 0 });
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 
   /* ---------- logo: use assets/logo.png if it exists ---------- */
   const logo = $("logoImg");
   logo.addEventListener("load", () => { logo.hidden = false; $("logoText").hidden = true; });
   if (logo.complete && logo.naturalWidth) { logo.hidden = false; $("logoText").hidden = true; }
-
-  /* ---------- End dimension backdrop ---------- */
-  function drawEnd() {
-    const c = $("endbg"); if (!c) return;
-    const H = 180, W = Math.max(200, Math.round(H * innerWidth / Math.max(1, innerHeight)));
-    c.width = W; c.height = H;
-    const x = c.getContext("2d");
-    let seed = 11; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let y = 0; y < H; y++) { const t = y / H; x.fillStyle = `rgb(${Math.round(10 + 16 * t)},${Math.round(5 + 9 * t)},${Math.round(20 + 28 * t)})`; x.fillRect(0, y, W, 1); }
-    for (let i = 0; i < 7; i++) {
-      const cx = r() * W, cy = r() * H * 0.7, rad = 25 + r() * 45;
-      const g = x.createRadialGradient(cx, cy, 0, cx, cy, rad);
-      g.addColorStop(0, "rgba(130,70,210,0.20)"); g.addColorStop(1, "rgba(130,70,210,0)");
-      x.fillStyle = g; x.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
-    }
-    for (let i = 0; i < W * 0.7; i++) { x.fillStyle = `rgba(232,222,255,${(0.2 + r() * 0.6).toFixed(2)})`; x.fillRect(Math.floor(r() * W), Math.floor(r() * H * 0.85), 1, 1); }
-
-    const island = (cx, cy, w) => {
-      cx = Math.round(cx); cy = Math.round(cy); w = Math.max(3, Math.round(w));
-      for (let i = -w; i <= w; i++) {
-        const e = 1 - (i / w) * (i / w);
-        const depth = Math.max(1, Math.round(e * w * 0.75 + (r() - 0.5) * 2));
-        const lift = Math.round((1 - e) * 2);
-        for (let d = 0; d < depth; d++) {
-          let col = d < 2 ? "#e6e3ab" : (r() < 0.18 ? "#a9a66c" : "#cbc88c");
-          if (d > depth * 0.6) col = r() < 0.4 ? "#8f8c58" : "#b0ad72";
-          x.fillStyle = col; x.fillRect(cx + i, cy + lift + d, 1, 1);
-        }
-      }
-    };
-    const pillar = (px, baseY, h) => {
-      px = Math.round(px);
-      x.fillStyle = "#120c1e"; x.fillRect(px - 2, baseY - h, 5, h);
-      x.fillStyle = "#2c1f45"; x.fillRect(px - 2, baseY - h, 1, h);
-      x.fillStyle = "#3a2a5c"; for (let k = 0; k < h; k += 3) x.fillRect(px + 1, baseY - h + k, 1, 1);
-      const cy = baseY - h - 3;
-      const g = x.createRadialGradient(px + 0.5, cy, 0, px + 0.5, cy, 9);
-      g.addColorStop(0, "rgba(255,150,230,0.55)"); g.addColorStop(1, "rgba(255,150,230,0)");
-      x.fillStyle = g; x.fillRect(px - 9, cy - 9, 19, 19);
-      x.fillStyle = "#ff9be6"; x.fillRect(px - 1, cy - 1, 3, 3);
-      x.fillStyle = "#fff0fb"; x.fillRect(px, cy, 1, 1);
-    };
-
-    // far islands, then fade them into the void
-    for (let i = 0; i < Math.max(4, Math.round(W / 70)); i++) island(r() * W, H * (0.25 + r() * 0.3), 4 + r() * 8);
-    x.fillStyle = "rgba(14,8,28,0.45)"; x.fillRect(0, 0, W, H);
-    // mid islands
-    island(W * 0.12, H * 0.58, 12 + r() * 6);
-    island(W * 0.88, H * 0.52, 10 + r() * 6);
-    // main island with obsidian pillars
-    const mw = Math.min(W * 0.3, 120), my = H * 0.76;
-    island(W * 0.5, my, mw);
-    const n = 5;
-    for (let k = 0; k < n; k++) {
-      const px = W * 0.5 - mw * 0.75 + (k / (n - 1)) * mw * 1.5;
-      pillar(px, my + 1, 18 + Math.round(r() * 26));
-    }
-    // a few drifting end particles
-    for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(190,120,255,${(0.25 + r() * 0.4).toFixed(2)})`; x.fillRect(Math.floor(r() * W), Math.floor(r() * H), 1, 1); }
-    // dim slightly so text stays readable
-    x.fillStyle = "rgba(15,11,26,0.18)"; x.fillRect(0, 0, W, H);
-  }
-  drawEnd();
-  let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(drawEnd, 200); });
 
   /* ---------- header bits ---------- */
   $("ipText").textContent = ADDR || "IP not set";
@@ -101,7 +48,7 @@
     img.onerror = () => img.removeAttribute("src");
     return img;
   };
-  const note = (el, text) => { el.textContent = ""; const s = document.createElement("span"); s.className = "note"; s.textContent = text; el.appendChild(s); };
+  const note = (box, text) => { box.textContent = ""; box.appendChild(el("span", "note", text)); };
 
   /* ---------- live status (mcsrvstat.us) ---------- */
   async function refreshStatus() {
@@ -120,7 +67,7 @@
       const count = on && d.players ? d.players.online || 0 : 0;
       const max = on && d.players ? d.players.max || 0 : 0;
       $("tCount").textContent = String(count);
-      if (max) { const sm = document.createElement("small"); sm.style.cssText = "font-size:14px;color:var(--muted)"; sm.textContent = "/ " + max; $("tCount").appendChild(sm); }
+      if (max) { const sm = el("small", null, "/ " + max); sm.style.cssText = "font-size:14px;color:var(--muted)"; $("tCount").appendChild(sm); }
       $("tMeter").style.width = max ? Math.min(100, (count / max) * 100) + "%" : "0";
       $("tVersion").textContent = on && d.version ? String(d.version).replace(/^.*?(\d+\.\d+(\.\d+)?).*$/, "$1") : "–";
       $("motd").textContent = on && d.motd && d.motd.clean ? d.motd.clean.join(" ").trim() : "";
@@ -129,19 +76,24 @@
       const list = on && d.players && Array.isArray(d.players.list) ? d.players.list : [];
       if (!on) note(heads, "The server is offline right now.");
       else if (!count) note(heads, "Nobody's on right now.");
-      else if (!list.length) note(heads, count + " playing. Turn on enable-query in server.properties to show their names.");
-      else list.forEach((p) => { const el = document.createElement("div"); el.className = "head"; el.appendChild(head(p.name, 22)); el.append(p.name); heads.appendChild(el); });
+      else if (!list.length) note(heads, count + " playing.");
+      else list.forEach((p) => {
+        const b = el("button", "head"); b.type = "button";
+        b.appendChild(head(p.name, 22)); b.append(p.name);
+        b.onclick = () => openProfileByName(p.name);
+        heads.appendChild(b);
+      });
     } catch (e) {
       $("tStatus").textContent = "Unknown"; $("tUpdated").textContent = "Couldn't reach the status service";
       note(heads, "Couldn't check the server right now. Trying again in a minute.");
     }
   }
 
-  /* ---------- leaderboard (data/leaderboard.json, built by GitHub Actions) ---------- */
+  /* ---------- leaderboard ---------- */
   function renderTabs() {
     const t = $("tabs"); t.textContent = "";
     STATS.forEach((s) => {
-      const b = document.createElement("button"); b.type = "button"; b.textContent = s.label; b.setAttribute("aria-pressed", s.key === current);
+      const b = el("button", null, s.label); b.type = "button"; b.setAttribute("aria-pressed", s.key === current);
       b.onclick = () => { current = s.key; try { localStorage.setItem("nc_tab", current); } catch (e) {} renderTabs(); renderBoard(); };
       t.appendChild(b);
     });
@@ -154,25 +106,139 @@
     const max = Math.max(1, ...list.map((p) => Number(p[current]) || 0));
     list.forEach((p, i) => {
       const v = Number(p[current]) || 0;
-      const r = document.createElement("div"); r.className = "row r" + (i + 1);
-      const rk = document.createElement("div"); rk.className = "rank"; rk.textContent = i + 1;
-      const who = document.createElement("div"); who.className = "who"; who.appendChild(head(p.name, 32));
-      const n = document.createElement("span"); n.textContent = p.name; who.appendChild(n);
-      const val = document.createElement("div"); val.className = "val";
-      val.textContent = v.toLocaleString(undefined, { maximumFractionDigits: stat.digits || 0 });
-      if (stat.unit) { const u = document.createElement("small"); u.textContent = stat.unit; val.appendChild(u); }
-      const bar = document.createElement("div"); bar.className = "bar"; const bi = document.createElement("i"); bi.style.width = (v / max) * 100 + "%"; bar.appendChild(bi);
-      r.append(rk, who, val, bar); b.appendChild(r);
+      const r = el("button", "row r" + (i + 1)); r.type = "button";
+      r.setAttribute("aria-label", "Open " + p.name + "'s profile");
+      r.appendChild(el("div", "rank", String(i + 1)));
+      const who = el("div", "who"); who.appendChild(head(p.name, 32)); who.appendChild(el("span", null, p.name));
+      const val = el("div", "val", fmt(v, stat.digits)); if (stat.unit) val.appendChild(el("small", null, stat.unit));
+      const bar = el("div", "bar"); const bi = el("i"); bi.style.width = (v / max) * 100 + "%"; bar.appendChild(bi);
+      r.append(who, val, bar);
+      r.onclick = () => openProfile(p);
+      b.appendChild(r);
     });
   }
+
+  /* ---------- Hall of Fame ---------- */
+  const RECORDS = [
+    { key: "playtime_hours", title: "Most dedicated", unit: "hrs played", digits: 1 },
+    { key: "diamonds", title: "Top diamond miner", unit: "diamond ores" },
+    { key: "mob_kills", title: "Mob slayer", unit: "mobs killed" },
+    { key: "since_death_hours", title: "Longest without dying", unit: "hrs alive", digits: 1 },
+    { key: "deaths", title: "Most deaths", unit: "deaths" },
+    { key: "blocks_placed", title: "Master builder", unit: "blocks placed" },
+    { key: "elytra_km", title: "Sky pilot", unit: "km flown", digits: 1 },
+    { key: "villager_trades", title: "Top trader", unit: "trades" }
+  ];
+  function renderHall() {
+    const box = $("hof"); box.textContent = "";
+    if (!players.length) { box.innerHTML = '<div class="empty"><strong>No records yet</strong>Records appear once the stats sync.</div>'; return; }
+    RECORDS.forEach((rec) => {
+      const top = players.slice().sort((a, b) => (Number(b[rec.key]) || 0) - (Number(a[rec.key]) || 0))[0];
+      if (!top || !(Number(top[rec.key]) > 0)) return;
+      const card = el("button", "rec"); card.type = "button";
+      card.appendChild(el("div", "eyebrow", rec.title));
+      const who = el("div", "rec-who"); who.appendChild(head(top.name, 40)); who.appendChild(el("span", null, top.name));
+      card.appendChild(who);
+      const v = el("div", "rec-val", fmt(top[rec.key], rec.digits)); v.appendChild(el("small", null, " " + rec.unit));
+      card.appendChild(v);
+      card.onclick = () => openProfile(top);
+      box.appendChild(card);
+    });
+  }
+
+  /* ---------- Timeline ---------- */
+  function renderTimeline() {
+    const ol = $("tl"); ol.textContent = "";
+    const items = autoTimeline.map((e) => ({ date: e.date, title: e.title, text: e.player ? "by " + e.player : "", player: e.player }))
+      .concat(manualEvents.map((e) => ({ date: e.date, title: e.title, text: e.text || "" })))
+      .filter((e) => e.date && e.title)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (!items.length) { const li = el("li", "empty"); li.innerHTML = "<strong>Nothing yet</strong>Big moments show up here as players reach them."; ol.appendChild(li); return; }
+    items.forEach((e) => {
+      const li = el("li", "tl-item");
+      li.appendChild(el("time", "tl-date", new Date(e.date).toLocaleDateString([], { month: "short", day: "numeric" })));
+      const body = el("div", "tl-body");
+      body.appendChild(el("strong", null, e.title));
+      if (e.player) { const who = el("span", "tl-who"); who.appendChild(head(e.player, 18)); who.append(e.player); body.appendChild(who); }
+      else if (e.text) body.appendChild(el("span", "tl-who", e.text));
+      li.appendChild(body);
+      ol.appendChild(li);
+    });
+  }
+
+  /* ---------- Player profile ---------- */
+  const PROFILE_STATS = [
+    ["playtime_hours", "Playtime", "hrs", 1], ["deaths", "Deaths", "", 0], ["since_death_hours", "Since last death", "hrs", 1],
+    ["mob_kills", "Mob kills", "", 0], ["player_kills", "Player kills", "", 0], ["diamonds", "Diamond ores", "", 0],
+    ["blocks_mined", "Blocks mined", "", 0], ["blocks_placed", "Blocks placed", "", 0], ["items_crafted", "Items crafted", "", 0],
+    ["villager_trades", "Villager trades", "", 0], ["fish_caught", "Fish caught", "", 0], ["jumps", "Jumps", "", 0],
+    ["distance_km", "Distance", "km", 1], ["elytra_km", "Elytra", "km", 1], ["advancements", "Advancements", "", 0]
+  ];
+  function openProfileByName(name) {
+    const p = players.find((x) => x.name.toLowerCase() === String(name).toLowerCase());
+    if (p) openProfile(p);
+  }
+  function openProfile(p) {
+    const box = $("pf"); box.textContent = "";
+    const top = el("div", "pf-top"); top.appendChild(head(p.name, 72));
+    const tt = el("div"); const h = el("h3", null, p.name); h.id = "pfName"; tt.appendChild(h);
+    if (p.fav_mob) tt.appendChild(el("div", "pf-sub", "Favorite mob to kill: " + p.fav_mob.name + " (" + fmt(p.fav_mob.count) + ")"));
+    top.appendChild(tt); box.appendChild(top);
+
+    const grid = el("div", "pf-grid");
+    PROFILE_STATS.forEach(([k, label, unit, digits]) => {
+      const c = el("div", "pf-stat");
+      c.appendChild(el("div", "eyebrow", label));
+      const v = el("div", "pf-v", fmt(p[k], digits)); if (unit) v.appendChild(el("small", null, " " + unit));
+      c.appendChild(v); grid.appendChild(c);
+    });
+    box.appendChild(grid);
+
+    const lists = el("div", "pf-lists");
+    const mk = (title, arr) => {
+      const w = el("div"); w.appendChild(el("div", "eyebrow", title));
+      const ul = el("ul", "pf-list");
+      if (!arr || !arr.length) ul.appendChild(el("li", "note", "None yet"));
+      (arr || []).forEach((x) => { const li = el("li"); li.appendChild(el("span", null, x.name)); li.appendChild(el("b", null, fmt(x.count))); ul.appendChild(li); });
+      w.appendChild(ul); return w;
+    };
+    lists.appendChild(mk("Most killed", p.top_kills));
+    lists.appendChild(mk("Killed by", p.killed_by));
+    box.appendChild(lists);
+
+    const adv = p.adv_list || [];
+    const aw = el("div", "pf-adv");
+    aw.appendChild(el("div", "eyebrow", "Advancements unlocked · " + adv.length));
+    const chips = el("div", "chips");
+    if (!adv.length) chips.appendChild(el("span", "note", "None yet"));
+    adv.forEach((a) => { const c = el("span", "chip", a.title); if (a.time) c.title = new Date(a.time).toLocaleString(); chips.appendChild(c); });
+    aw.appendChild(chips); box.appendChild(aw);
+
+    const dlg = $("profile");
+    if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute("open", "");
+    try { history.replaceState(null, "", "#player-" + encodeURIComponent(p.name)); } catch (e) {}
+  }
+  function closeProfile() {
+    const dlg = $("profile"); if (dlg.open) dlg.close ? dlg.close() : dlg.removeAttribute("open");
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  }
+  $("pfClose").onclick = closeProfile;
+  $("profile").addEventListener("click", (e) => { if (e.target === $("profile")) closeProfile(); });
+  $("profile").addEventListener("close", () => { try { if (location.hash.startsWith("#player-")) history.replaceState(null, "", location.pathname + location.search); } catch (e) {} });
+
+  /* ---------- data loading ---------- */
   async function loadLeaderboard() {
     try {
       const res = await fetch("data/leaderboard.json?t=" + Date.now());
       const d = await res.json();
       players = Array.isArray(d.players) ? d.players : [];
+      autoTimeline = Array.isArray(d.timeline) ? d.timeline : [];
       $("lbUpdated").textContent = d.updated ? "Stats last synced " + new Date(d.updated).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + ". Syncs about every 30 minutes." : "";
     } catch (e) { players = []; }
-    renderBoard();
+    try { const r = await fetch("data/events.json?t=" + Date.now()); const ev = await r.json(); manualEvents = Array.isArray(ev) ? ev : []; } catch (e) { manualEvents = []; }
+    renderBoard(); renderHall(); renderTimeline();
+    const m = location.hash.match(/^#player-(.+)$/);
+    if (m && !$("profile").open) openProfileByName(decodeURIComponent(m[1]));
   }
 
   renderTabs();

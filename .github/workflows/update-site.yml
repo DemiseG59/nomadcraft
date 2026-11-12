@@ -47,12 +47,10 @@ jobs:
             set net:max-retries 2;
             set ftp:passive-mode on;
             pwd;
-            cls -1;
-            cls -1 World/;
-            cls -1 World/players/;
-            mirror --verbose World/players/stats mc/stats;
-            mirror --verbose World/players/advancements mc/advancements;
-            get usercache.json -o mc/usercache.json;
+            cls -l default/ profile_yhsfd/;
+            mirror --verbose default/World/players/stats mc/stats;
+            mirror --verbose default/World/players/advancements mc/advancements;
+            get default/usercache.json -o mc/usercache.json;
             bye"
 
       - name: Build leaderboard

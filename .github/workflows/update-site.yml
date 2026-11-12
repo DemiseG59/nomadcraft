@@ -1,0 +1,61 @@
+name: Update Nomadcraft site
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "*/30 * * * *"   # pull fresh stats about every 30 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      FTP_HOST: ${{ secrets.FTP_HOST }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASS: ${{ secrets.FTP_PASS }}
+      FTP_PORT: ${{ secrets.FTP_PORT }}
+      FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL }}
+      WORLD_DIR: ${{ secrets.WORLD_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download player stats from the server
+        if: env.FTP_HOST != ''
+        continue-on-error: true
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          mkdir -p mc
+          PROTO="${FTP_PROTOCOL:-ftp}"
+          PORT="${FTP_PORT:-21}"
+          WORLD="${WORLD_DIR:-world}"
+          lftp -u "$FTP_USER","$FTP_PASS" -p "$PORT" "$PROTO://$FTP_HOST" -e "
+            set ssl:verify-certificate no;
+            set sftp:auto-confirm yes;
+            set net:max-retries 2;
+            mirror --verbose $WORLD/stats mc/stats;
+            mirror --verbose $WORLD/advancements mc/advancements;
+            get usercache.json -o mc/usercache.json;
+            bye"
+
+      - name: Build leaderboard
+        run: python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

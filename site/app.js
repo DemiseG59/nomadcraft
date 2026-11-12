@@ -272,3 +272,20 @@
   setInterval(refreshStatus, Math.max(30, CFG.refreshSeconds || 60) * 1000);
   setInterval(loadLeaderboard, 5 * 60 * 1000);
 })();
+
+/* World map: only show the embedded map once its files exist */
+(function () {
+  const frame = document.querySelector(".mapframe");
+  if (!frame) return;
+  const iframe = frame.querySelector("iframe");
+  const src = iframe.getAttribute("src");
+  iframe.removeAttribute("src");
+  const msg = document.createElement("div");
+  msg.className = "map-wait";
+  msg.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:24px;color:var(--muted);font-size:14px;background:rgba(15,11,26,.6)";
+  msg.innerHTML = "<strong>The world map is being copied to the site</strong><span>It appears here automatically once the first copy finishes. Until then, use <em>Live map with players</em> below.</span>";
+  frame.appendChild(msg);
+  fetch("map/settings.json", { method: "GET", cache: "no-store" })
+    .then((r) => { if (r.ok) { msg.remove(); iframe.setAttribute("src", src); } })
+    .catch(() => {});
+})();

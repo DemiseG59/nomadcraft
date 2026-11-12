@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nomadcraft SMP</title>
+<meta name="description" content="Nomadcraft — a Minecraft Java survival SMP. Live server status, who's online, and the player leaderboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="assets/logo.png">
+</head>
+<body>
+
+<header class="hero">
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <img class="logo-img" id="logoImg" src="assets/logo.png" alt="Nomadcraft" hidden>
+    <div class="logo" id="logoText" aria-hidden="true">NOMADCRAFT</div>
+    <div class="eyebrow">Minecraft Java SMP · Season 1</div>
+    <h1>Nomadcraft SMP</h1>
+    <p class="motd" id="motd"></p>
+    <div class="actions">
+      <a class="cta" href="#leaderboard">View the leaderboard</a>
+      <span class="ip"><code id="ipText">…</code><button class="cta ghost" id="copyIp" type="button">Copy IP</button></span>
+      <a class="cta ghost" id="discordLink" href="#" target="_blank" rel="noopener" hidden>Join the Discord</a>
+    </div>
+
+    <div class="tiles" id="tiles" data-state="unknown">
+      <div class="tile"><div class="eyebrow">Server status</div><div class="v"><span class="dot"></span><span id="tStatus">Checking…</span></div><div class="s" id="tUpdated">Pinging server</div></div>
+      <div class="tile"><div class="eyebrow">Players online</div><div class="v" id="tCount">–</div><div class="meter"><i id="tMeter"></i></div></div>
+      <div class="tile"><div class="eyebrow">Version</div><div class="v" id="tVersion">–</div><div class="s">Fabric modpack</div></div>
+      <div class="tile"><div class="eyebrow">Currency</div><div class="v">Diamonds</div><div class="s">Shopping district</div></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="block">
+    <div class="eyebrow">About</div>
+    <h2>What this server is</h2>
+    <p class="about"><b>Nomadcraft</b> is a survival SMP for friends and friends of friends, running a Fabric modpack with extra mobs, magic and pets. It's strictly survival, PvP is friendly and opt-in, and the economy runs on diamonds through a Hermitcraft-style shopping district. We usually play from around 10 PM onward, and the whole thing is filmed for YouTube.</p>
+
+    <div class="rules">
+      <div class="rule"><div class="n">01</div><strong>No griefing or stealing</strong><p>Don't break, take or blow up anything that isn't yours.</p></div>
+      <div class="rule"><div class="n">02</div><strong>Pranks are fine if reversible</strong><p>Keep it funny. Never wreck someone's build or farm.</p></div>
+      <div class="rule"><div class="n">03</div><strong>No PvP outside events</strong><p>Fighting only happens in opted-in events and wars.</p></div>
+      <div class="rule"><div class="n">04</div><strong>Ask before building nearby</strong><p>Check with a player before you build close to their base.</p></div>
+      <div class="rule"><div class="n">05</div><strong>No cheats, no x-ray</strong><p>Strictly survival. Nobody goes into creative.</p></div>
+      <div class="rule"><div class="n">06</div><strong>Mind the lag, talk it out</strong><p>Keep farms reasonable. Sort disputes yourselves first; Demise steps in if needed.</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="eyebrow">Live</div>
+    <h2>Who's on right now</h2>
+    <div class="online" id="heads"><span class="note">Checking…</span></div>
+  </section>
+
+  <section class="block" id="leaderboard">
+    <div class="eyebrow">Leaderboard</div>
+    <h2>Top nomads</h2>
+    <div class="tabs" id="tabs" role="group" aria-label="Leaderboard stat"></div>
+    <div class="board" id="board"><div class="empty"><strong>Loading leaderboard…</strong></div></div>
+    <p class="small" id="lbUpdated"></p>
+  </section>
+
+  <footer>Nomadcraft SMP · Not affiliated with Mojang or Microsoft.</footer>
+</main>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

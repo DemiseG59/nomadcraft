@@ -46,22 +46,15 @@ jobs:
             set sftp:auto-confirm yes;
             set net:max-retries 2;
             set ftp:passive-mode on;
-            pwd;
-            cls -l default/ profile_yhsfd/;
-            mirror --verbose default/World/players/stats mc/stats;
-            mirror --verbose default/World/players/advancements mc/advancements;
+            mirror --no-perms default/World/players/stats mc/stats;
+            mirror --no-perms default/World/players/advancements mc/advancements;
             get default/usercache.json -o mc/usercache.json;
             bye"
 
-      - name: Show stats file layout
-        continue-on-error: true
-        run: |
-          ls -la mc/stats | head -n 10
-          f=$(ls mc/stats/*.json | head -n 1); python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(json.dumps(d)[:1500])" "$f"
-          a=$(ls mc/advancements/*.json | head -n 1); python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(list(d)[:15])" "$a"
-
       - name: Build leaderboard
-        run: python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json
+        run: |
+          chmod -R u+rwX mc 2>/dev/null || true
+          python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

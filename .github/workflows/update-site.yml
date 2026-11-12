@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "*/30 * * * *"   # pull fresh stats and map about every 30 minutes
+    - cron: "*/30 * * * *"   # pull fresh stats about every 30 minutes
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -55,52 +55,6 @@ jobs:
         run: |
           chmod -R u+rwX mc 2>/dev/null || true
           python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json
-
-      - name: Restore map cache
-        uses: actions/cache/restore@v4
-        with:
-          path: bluemap-cache
-          key: bluemap-${{ github.run_id }}
-          restore-keys: bluemap-
-
-      - name: Download BlueMap files (only changed tiles)
-        if: env.FTP_HOST != ''
-        continue-on-error: true
-        timeout-minutes: 30
-        run: |
-          mkdir -p bluemap-cache/web
-          lftp -u "$FTP_USER","$FTP_PASS" -p "${FTP_PORT:-21}" "${FTP_PROTOCOL:-ftp}://$FTP_HOST" -e "
-            set ssl:verify-certificate no;
-            set sftp:auto-confirm yes;
-            set net:max-retries 2;
-            set ftp:passive-mode on;
-            mirror --no-perms --only-newer --parallel=8 --exclude sql.php --exclude live/ profile_yhsfd/bluemap/web bluemap-cache/web;
-            bye"
-          chmod -R u+rwX bluemap-cache 2>/dev/null || true
-          du -sh bluemap-cache/web || true
-
-      - name: Save map cache
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: bluemap-cache
-          key: bluemap-${{ github.run_id }}
-
-      - name: Add map to the site
-        run: |
-          if [ -f bluemap-cache/web/index.html ]; then
-            rm -rf site/map
-            cp -r bluemap-cache/web site/map
-            find site/map -name '*.gz' -exec gunzip -f {} + || true
-            SIZE=$(du -sm site/map | cut -f1)
-            echo "Map size: ${SIZE} MB"
-            if [ "$SIZE" -gt 900 ]; then
-              echo "Map is too big for GitHub Pages, leaving it out this time."
-              rm -rf site/map
-            fi
-          else
-            echo "No BlueMap files yet."
-          fi
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

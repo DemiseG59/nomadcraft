@@ -45,8 +45,13 @@ jobs:
             set ssl:verify-certificate no;
             set sftp:auto-confirm yes;
             set net:max-retries 2;
-            mirror --verbose $WORLD/stats mc/stats;
-            mirror --verbose $WORLD/advancements mc/advancements;
+            set ftp:passive-mode on;
+            pwd;
+            cls -1;
+            cls -1 World/;
+            cls -1 World/players/;
+            mirror --verbose World/players/stats mc/stats;
+            mirror --verbose World/players/advancements mc/advancements;
             get usercache.json -o mc/usercache.json;
             bye"
 

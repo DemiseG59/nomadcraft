@@ -11,7 +11,6 @@
 <link rel="icon" href="assets/logo.png">
 </head>
 <body>
-<canvas id="endbg" aria-hidden="true"></canvas>
 
 <header class="hero">
   <div class="wrap">
@@ -57,16 +56,34 @@
     <div class="online" id="heads"><span class="note">Checking…</span></div>
   </section>
 
+  <section class="block" id="hall">
+    <div class="eyebrow">Server records</div>
+    <h2>Hall of Fame</h2>
+    <div class="hof" id="hof"><div class="empty"><strong>Loading records…</strong></div></div>
+  </section>
+
   <section class="block" id="leaderboard">
     <div class="eyebrow">Leaderboard</div>
     <h2>Top nomads</h2>
     <div class="tabs" id="tabs" role="group" aria-label="Leaderboard stat"></div>
     <div class="board" id="board"><div class="empty"><strong>Loading leaderboard…</strong></div></div>
     <p class="small" id="lbUpdated"></p>
+    <p class="small">Click a player to see their full profile.</p>
+  </section>
+
+  <section class="block" id="timeline">
+    <div class="eyebrow">Season 1</div>
+    <h2>Timeline</h2>
+    <ol class="tl" id="tl"><li class="empty"><strong>Loading timeline…</strong></li></ol>
   </section>
 
   <footer>Nomadcraft SMP · Not affiliated with Mojang or Microsoft.</footer>
 </main>
+
+<dialog class="profile" id="profile" aria-labelledby="pfName">
+  <button class="pf-close" id="pfClose" type="button" aria-label="Close profile">×</button>
+  <div id="pf"></div>
+</dialog>
 
 <script src="config.js"></script>
 <script src="app.js"></script>

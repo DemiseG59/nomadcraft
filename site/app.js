@@ -21,19 +21,69 @@
   logo.addEventListener("load", () => { logo.hidden = false; $("logoText").hidden = true; });
   if (logo.complete && logo.naturalWidth) { logo.hidden = false; $("logoText").hidden = true; }
 
-  /* ---------- pixel banner ---------- */
-  (function drawScene() {
-    const c = $("scene"), W = 160, H = 64; c.width = W; c.height = H;
+  /* ---------- End dimension backdrop ---------- */
+  function drawEnd() {
+    const c = $("endbg"); if (!c) return;
+    const H = 180, W = Math.max(200, Math.round(H * innerWidth / Math.max(1, innerHeight)));
+    c.width = W; c.height = H;
     const x = c.getContext("2d");
-    let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let y = 0; y < H; y++) { const t = y / H; x.fillStyle = `rgb(${Math.round(30 + 60 * t)},${Math.round(16 + 20 * t)},${Math.round(60 + 50 * t)})`; x.fillRect(0, y, W, 1); }
-    for (let i = 0; i < 70; i++) { x.fillStyle = `rgba(255,255,255,${(0.3 + r() * 0.6).toFixed(2)})`; x.fillRect(Math.floor(r() * W), Math.floor(r() * H * 0.55), 1, 1); }
-    x.fillStyle = "#efe3ff"; x.fillRect(122, 8, 8, 8); x.fillStyle = "#d6c4f2"; x.fillRect(124, 10, 2, 2); x.fillRect(127, 13, 2, 1);
-    const layer = (base, amp, freq, col, ph) => { x.fillStyle = col; for (let i = 0; i < W; i += 2) { const h = Math.round(base + Math.sin(i * freq + ph) * amp + Math.sin(i * freq * 2.3 + ph) * amp * 0.4); x.fillRect(i, h, 2, H - h); } };
-    layer(38, 5, 0.05, "#3b2470", 1); layer(44, 4, 0.08, "#2b1a52", 3); layer(52, 3, 0.11, "#1d1238", 5);
-    x.fillStyle = "#140c26"; x.fillRect(18, 34, 12, 16); x.fillStyle = "#7b3cff"; x.fillRect(20, 36, 8, 12);
-    x.fillStyle = "#b48bff"; for (let i = 0; i < 6; i++) x.fillRect(20 + Math.floor(r() * 8), 36 + Math.floor(r() * 12), 1, 1);
-  })();
+    let seed = 11; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let y = 0; y < H; y++) { const t = y / H; x.fillStyle = `rgb(${Math.round(10 + 16 * t)},${Math.round(5 + 9 * t)},${Math.round(20 + 28 * t)})`; x.fillRect(0, y, W, 1); }
+    for (let i = 0; i < 7; i++) {
+      const cx = r() * W, cy = r() * H * 0.7, rad = 25 + r() * 45;
+      const g = x.createRadialGradient(cx, cy, 0, cx, cy, rad);
+      g.addColorStop(0, "rgba(130,70,210,0.20)"); g.addColorStop(1, "rgba(130,70,210,0)");
+      x.fillStyle = g; x.fillRect(cx - rad, cy - rad, rad * 2, rad * 2);
+    }
+    for (let i = 0; i < W * 0.7; i++) { x.fillStyle = `rgba(232,222,255,${(0.2 + r() * 0.6).toFixed(2)})`; x.fillRect(Math.floor(r() * W), Math.floor(r() * H * 0.85), 1, 1); }
+
+    const island = (cx, cy, w) => {
+      cx = Math.round(cx); cy = Math.round(cy); w = Math.max(3, Math.round(w));
+      for (let i = -w; i <= w; i++) {
+        const e = 1 - (i / w) * (i / w);
+        const depth = Math.max(1, Math.round(e * w * 0.75 + (r() - 0.5) * 2));
+        const lift = Math.round((1 - e) * 2);
+        for (let d = 0; d < depth; d++) {
+          let col = d < 2 ? "#e6e3ab" : (r() < 0.18 ? "#a9a66c" : "#cbc88c");
+          if (d > depth * 0.6) col = r() < 0.4 ? "#8f8c58" : "#b0ad72";
+          x.fillStyle = col; x.fillRect(cx + i, cy + lift + d, 1, 1);
+        }
+      }
+    };
+    const pillar = (px, baseY, h) => {
+      px = Math.round(px);
+      x.fillStyle = "#120c1e"; x.fillRect(px - 2, baseY - h, 5, h);
+      x.fillStyle = "#2c1f45"; x.fillRect(px - 2, baseY - h, 1, h);
+      x.fillStyle = "#3a2a5c"; for (let k = 0; k < h; k += 3) x.fillRect(px + 1, baseY - h + k, 1, 1);
+      const cy = baseY - h - 3;
+      const g = x.createRadialGradient(px + 0.5, cy, 0, px + 0.5, cy, 9);
+      g.addColorStop(0, "rgba(255,150,230,0.55)"); g.addColorStop(1, "rgba(255,150,230,0)");
+      x.fillStyle = g; x.fillRect(px - 9, cy - 9, 19, 19);
+      x.fillStyle = "#ff9be6"; x.fillRect(px - 1, cy - 1, 3, 3);
+      x.fillStyle = "#fff0fb"; x.fillRect(px, cy, 1, 1);
+    };
+
+    // far islands, then fade them into the void
+    for (let i = 0; i < Math.max(4, Math.round(W / 70)); i++) island(r() * W, H * (0.25 + r() * 0.3), 4 + r() * 8);
+    x.fillStyle = "rgba(14,8,28,0.45)"; x.fillRect(0, 0, W, H);
+    // mid islands
+    island(W * 0.12, H * 0.58, 12 + r() * 6);
+    island(W * 0.88, H * 0.52, 10 + r() * 6);
+    // main island with obsidian pillars
+    const mw = Math.min(W * 0.3, 120), my = H * 0.76;
+    island(W * 0.5, my, mw);
+    const n = 5;
+    for (let k = 0; k < n; k++) {
+      const px = W * 0.5 - mw * 0.75 + (k / (n - 1)) * mw * 1.5;
+      pillar(px, my + 1, 18 + Math.round(r() * 26));
+    }
+    // a few drifting end particles
+    for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(190,120,255,${(0.25 + r() * 0.4).toFixed(2)})`; x.fillRect(Math.floor(r() * W), Math.floor(r() * H), 1, 1); }
+    // dim slightly so text stays readable
+    x.fillStyle = "rgba(15,11,26,0.18)"; x.fillRect(0, 0, W, H);
+  }
+  drawEnd();
+  let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(drawEnd, 200); });
 
   /* ---------- header bits ---------- */
   $("ipText").textContent = ADDR || "IP not set";

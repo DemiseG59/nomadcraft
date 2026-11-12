@@ -1,3 +1,4 @@
+main p.about{background:var(--panel);border:1px solid var(--line);padding:16px 20px;max-width:none;color:#c4bddc;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 [hidden]{display:none!important}
 
 /* Layout: server-listing page. Pixel banner hero, stat tile row, about, rules grid, live online, leaderboard. Deliberately one dark purple look. */

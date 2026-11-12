@@ -22,6 +22,7 @@
   let players = [];
   let autoTimeline = [];
   let manualEvents = [];
+  let ADV = {};
   try { const s = localStorage.getItem("nc_tab"); if (STATS.some((x) => x.key === s)) current = s; } catch (e) {}
 
   const fmt = (v, digits) => (Number(v) || 0).toLocaleString(undefined, { maximumFractionDigits: digits || 0 });
@@ -207,12 +208,35 @@
     box.appendChild(lists);
 
     const adv = p.adv_list || [];
+    const have = new Set(adv.map((a) => a.id));
+    const total = Object.keys(ADV).length;
     const aw = el("div", "pf-adv");
-    aw.appendChild(el("div", "eyebrow", "Advancements unlocked · " + adv.length));
+    aw.appendChild(el("div", "eyebrow", "Advancements unlocked · " + adv.length + (total ? " of " + total : "")));
     const chips = el("div", "chips");
     if (!adv.length) chips.appendChild(el("span", "note", "None yet"));
-    adv.forEach((a) => { const c = el("span", "chip", a.title); if (a.time) c.title = new Date(a.time).toLocaleString(); chips.appendChild(c); });
+    adv.forEach((a) => {
+      const info = ADV[a.id];
+      const c = el("span", "chip", info ? info.title : a.title);
+      c.title = (info ? info.how + " " : "") + (a.time ? "Unlocked " + new Date(a.time).toLocaleDateString() : "");
+      chips.appendChild(c);
+    });
     aw.appendChild(chips); box.appendChild(aw);
+
+    const locked = Object.entries(ADV).filter(([id]) => !have.has(id));
+    if (locked.length) {
+      const det = el("details", "pf-locked");
+      det.appendChild(el("summary", null, "Still to unlock · " + locked.length + " (how to get them)"));
+      const CATS = { story: "Minecraft", nether: "Nether", end: "The End", adventure: "Adventure", husbandry: "Husbandry" };
+      Object.keys(CATS).forEach((cat) => {
+        const items = locked.filter(([, v]) => v.cat === cat);
+        if (!items.length) return;
+        det.appendChild(el("div", "eyebrow lk-cat", CATS[cat] + " · " + items.length));
+        const ul = el("ul", "lk-list");
+        items.forEach(([, v]) => { const li = el("li"); li.appendChild(el("strong", null, v.title)); li.appendChild(el("span", null, v.how)); ul.appendChild(li); });
+        det.appendChild(ul);
+      });
+      box.appendChild(det);
+    }
 
     const dlg = $("profile");
     if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); } else dlg.setAttribute("open", "");
@@ -236,6 +260,7 @@
       $("lbUpdated").textContent = d.updated ? "Stats last synced " + new Date(d.updated).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + ". Syncs about every 30 minutes." : "";
     } catch (e) { players = []; }
     try { const r = await fetch("data/events.json?t=" + Date.now()); const ev = await r.json(); manualEvents = Array.isArray(ev) ? ev : []; } catch (e) { manualEvents = []; }
+    if (!Object.keys(ADV).length) { try { const r = await fetch("data/advancements.json"); ADV = (await r.json()) || {}; } catch (e) { ADV = {}; } }
     renderBoard(); renderHall(); renderTimeline();
     const m = location.hash.match(/^#player-(.+)$/);
     if (m && !$("profile").open) openProfileByName(decodeURIComponent(m[1]));

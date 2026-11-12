@@ -1,3 +1,5 @@
+#endbg{display:none!important}
+html body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(15,11,26,.45) 0%,rgba(15,11,26,.7) 60%,rgba(15,11,26,.85) 100%),url("assets/Screenshot%202026-11-12%20050933.png") center/cover no-repeat}
 main p.about{background:var(--panel);border:1px solid var(--line);padding:16px 20px;max-width:none;color:#c4bddc;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 [hidden]{display:none!important}
 

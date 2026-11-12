@@ -2,7 +2,7 @@
 
 /* Layout: server-listing page. Pixel banner hero, stat tile row, about, rules grid, live online, leaderboard. Deliberately one dark purple look. */
 :root{
-  --bg:#0f0b1a; --panel:#17112a; --panel-2:#1f1838; --line:#2d2450;
+  --bg:#0f0b1a; --panel:rgba(23,17,42,.74); --panel-2:rgba(36,28,66,.78); --line:rgba(98,78,170,.45);
   --violet:#a974ff; --violet-deep:#6c3fd1; --text:#ece8f7; --muted:#9a92b8; --dim:#6e6690;
   --ok:#5fd38a; --off:#ef6b6b; --gold:#f2c94c; --silver:#c9d1dc; --bronze:#d08a53;
   --display:"Pixelify Sans","Courier New",monospace;
@@ -17,7 +17,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:15
 /* hero */
 .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
 .hero canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,11,26,.15) 0%,rgba(15,11,26,.55) 55%,var(--bg) 100%)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,11,26,0) 0%,rgba(15,11,26,.25) 70%,rgba(15,11,26,.55) 100%);pointer-events:none}
 .hero .wrap{position:relative;z-index:1;padding-block:56px 40px}
 .logo{font-family:var(--display);font-weight:700;font-size:clamp(52px,13vw,128px);line-height:.9;margin:0 0 28px;color:#c9a6ff;letter-spacing:2px;
   text-shadow:0 6px 0 #4b2a95,0 10px 0 #2a1756,0 18px 30px rgba(0,0,0,.6);text-align:center}
@@ -101,3 +101,8 @@ body{margin:0}
 .motd{color:var(--muted);font-size:14px;margin:0 0 6px}
 .actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .small{font-size:13px;color:var(--dim);margin-top:10px}
+
+/* End backdrop */
+#endbg{position:fixed;inset:0;width:100%;height:100%;z-index:-1;image-rendering:pixelated;pointer-events:none}
+.about,.note,.small,footer{text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.tiles,.board,.rules{backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}

@@ -53,6 +53,13 @@ jobs:
             get default/usercache.json -o mc/usercache.json;
             bye"
 
+      - name: Show stats file layout
+        continue-on-error: true
+        run: |
+          ls -la mc/stats | head -n 10
+          f=$(ls mc/stats/*.json | head -n 1); python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(json.dumps(d)[:1500])" "$f"
+          a=$(ls mc/advancements/*.json | head -n 1); python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(list(d)[:15])" "$a"
+
       - name: Build leaderboard
         run: python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json
 

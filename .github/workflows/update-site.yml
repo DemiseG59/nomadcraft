@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
@@ -29,14 +29,34 @@ jobs:
       FTP_PASS: ${{ secrets.FTP_PASS }}
       FTP_PORT: ${{ secrets.FTP_PORT }}
       FTP_PROTOCOL: ${{ secrets.FTP_PROTOCOL }}
+      LIVE: https://demiseg59.github.io/nomadcraft
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read the current data from the live site
+        run: |
+          mkdir -p prev
+          for f in history mods leaderboard; do
+            code=$(curl -sS -L --retry 3 --retry-delay 5 -o "prev/$f.json" -w '%{http_code}' "$LIVE/data/$f.json?t=$(date +%s)" || echo 000)
+            echo "$f.json -> $code"
+            if [ "$code" != "200" ]; then
+              rm -f "prev/$f.json"
+              if [ "$f" = "history" ] && [ "$code" != "404" ]; then
+                echo "Couldn't read the saved history, stopping so it isn't wiped."
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Check who's online
+        continue-on-error: true
+        run: curl -sS --retry 2 -o status.json "https://api.mcsrvstat.us/3/Nomadcraft.apexmc.co" || rm -f status.json
 
       - name: Install FTP client
         if: env.FTP_HOST != ''
         run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
-      - name: Download player stats from the server
+      - name: Download player stats and mod list from the server
         if: env.FTP_HOST != ''
         continue-on-error: true
         run: |
@@ -49,12 +69,36 @@ jobs:
             mirror --no-perms profile_yhsfd/World/players/stats mc/stats;
             mirror --no-perms profile_yhsfd/World/players/advancements mc/advancements;
             get profile_yhsfd/usercache.json -o mc/usercache.json;
+            cls -1 profile_yhsfd/mods/ > mods_list.txt;
             bye"
+
+      - name: Download any new mods
+        if: env.FTP_HOST != ''
+        continue-on-error: true
+        timeout-minutes: 10
+        run: |
+          python3 scripts/build_mods.py plan --list mods_list.txt --prev prev/mods.json --jars mods_new --cmds get_mods.lftp
+          if [ -s get_mods.lftp ]; then
+            lftp -u "$FTP_USER","$FTP_PASS" -p "${FTP_PORT:-21}" "${FTP_PROTOCOL:-ftp}://$FTP_HOST" -e "
+              set ssl:verify-certificate no;
+              set sftp:auto-confirm yes;
+              set net:max-retries 2;
+              set ftp:passive-mode on;
+              source get_mods.lftp;
+              bye"
+          fi
 
       - name: Build leaderboard
         run: |
-          chmod -R u+rwX mc 2>/dev/null || true
-          python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json
+          chmod -R u+rwX mc mods_new 2>/dev/null || true
+          python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json --fallback prev/leaderboard.json
+
+      - name: Build mod list
+        continue-on-error: true
+        run: python3 scripts/build_mods.py build --list mods_list.txt --prev prev/mods.json --jars mods_new --out site/data/mods.json
+
+      - name: Build history and weekly challenges
+        run: python3 scripts/build_history.py --prev prev/history.json --lb site/data/leaderboard.json --status status.json --out site/data/history.json
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

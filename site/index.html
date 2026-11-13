@@ -8,6 +8,173 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="extras.css">
+<link rel="icon" href="assets/logo.png">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="logo-img" id="logoImg" src="assets/logo.png" alt="Nomadcraft" hidden>
+    <div class="logo" id="logoText" aria-hidden="true">NOMADCRAFT</div>
+    <div class="eyebrow">Minecraft Java SMP · Season 1</div>
+    <h1>Nomadcraft SMP</h1>
+    <p class="motd" id="motd"></p>
+    <div class="actions">
+      <a class="cta" href="#leaderboard">View the leaderboard</a>
+      <span class="ip"><code id="ipText">…</code><button class="cta ghost" id="copyIp" type="button">Copy IP</button></span>
+      <a class="cta ghost" id="discordLink" href="#" target="_blank" rel="noopener" hidden>Join the Discord</a>
+    </div>
+
+    <p class="fact" id="fact" hidden><b>Did you know?</b><span></span></p>
+
+    <div class="tiles" id="tiles" data-state="unknown">
+      <div class="tile"><div class="eyebrow">Server status</div><div class="v"><span class="dot"></span><span id="tStatus">Checking…</span></div><div class="s" id="tUpdated">Pinging server</div></div>
+      <div class="tile"><div class="eyebrow">Players online</div><div class="v" id="tCount">–</div><div class="meter"><i id="tMeter"></i></div></div>
+      <div class="tile"><div class="eyebrow">Version</div><div class="v" id="tVersion">–</div><div class="s">Fabric modpack</div></div>
+      <div class="tile"><div class="eyebrow">Currency</div><div class="v">Diamonds</div><div class="s">Shopping district</div></div>
+    </div>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Sections"><div class="wrap">
+  <a href="#week">This week</a><a href="#ranks">Ranks</a><a href="#hall">Records</a><a href="#leaderboard">Leaderboard</a><a href="#versus">Head-to-head</a><a href="#server">Server stats</a><a href="#activity">Activity</a><a href="#map">Map</a><a href="#timeline">Timeline</a><a href="#mods">Mods</a><a href="#shops">Shops</a><a href="#gallery">Gallery</a>
+</div></nav>
+
+<main class="wrap">
+  <section class="block">
+    <div class="eyebrow">About</div>
+    <h2>What this server is</h2>
+    <p class="about"><b>Nomadcraft</b> is a survival SMP that's open to new players, running a Fabric modpack with extra mobs, magic and pets. It's strictly survival, PvP is friendly and opt-in, and the economy runs on diamonds through a player-run shopping district. Hop on and join us.</p>
+
+    <div class="rules">
+      <div class="rule"><div class="n">01</div><strong>No griefing or stealing</strong><p>Don't break, take or blow up anything that isn't yours.</p></div>
+      <div class="rule"><div class="n">02</div><strong>Pranks are fine if reversible</strong><p>Keep it funny. Never wreck someone's build or farm.</p></div>
+      <div class="rule"><div class="n">03</div><strong>No PvP outside events</strong><p>Fighting only happens in opted-in events and wars.</p></div>
+      <div class="rule"><div class="n">04</div><strong>Ask before building nearby</strong><p>Check with a player before you build close to their base.</p></div>
+      <div class="rule"><div class="n">05</div><strong>No cheats, no x-ray</strong><p>Strictly survival. Nobody goes into creative.</p></div>
+      <div class="rule"><div class="n">06</div><strong>Mind the lag, talk it out</strong><p>Keep farms reasonable. Sort disputes yourselves first; Demise steps in if needed.</p></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="eyebrow">Live</div>
+    <h2>Who's on right now</h2>
+    <div class="online" id="heads"><span class="note">Checking…</span></div>
+  </section>
+
+  <section class="block" id="week">
+    <div class="sec-head"><div><div class="eyebrow">Grind</div><h2>This week</h2></div><span class="pill" id="weekReset"></span></div>
+    <div id="weekBody"><p class="note">Loading this week…</p></div>
+  </section>
+
+  <section class="block" id="ranks">
+    <div class="eyebrow">Level up</div>
+    <h2>Nomad ranks</h2>
+    <div class="ranks" id="ranksBody"><p class="note">Loading ranks…</p></div>
+  </section>
+
+  <section class="block" id="hall">
+    <div class="eyebrow">Server records</div>
+    <h2>Hall of Fame</h2>
+    <div class="hof" id="hof"><div class="empty"><strong>Loading records…</strong></div></div>
+  </section>
+
+  <section class="block" id="leaderboard">
+    <div class="eyebrow">Leaderboard</div>
+    <h2>Top nomads</h2>
+    <div class="tabs" id="tabs" role="group" aria-label="Leaderboard stat"></div>
+    <div class="board" id="board"><div class="empty"><strong>Loading leaderboard…</strong></div></div>
+    <p class="small" id="lbUpdated"></p>
+    <p class="small">Click a player to see their full profile.</p>
+  </section>
+
+  <section class="block" id="versus">
+    <div class="eyebrow">Compare</div>
+    <h2>Head-to-head</h2>
+    <div class="panel">
+      <div class="vs-pick"><select id="vsA" aria-label="First player"></select><span>vs</span><select id="vsB" aria-label="Second player"></select></div>
+      <div id="vsBody"><p class="note">Loading players…</p></div>
+    </div>
+  </section>
+
+  <section class="block" id="server">
+    <div class="eyebrow">Everyone combined</div>
+    <h2>Server stats</h2>
+    <div id="serverBody"><p class="note">Loading…</p></div>
+  </section>
+
+  <section class="block" id="activity">
+    <div class="eyebrow">When people play</div>
+    <h2>Activity</h2>
+    <div class="activity" id="activityBody"><p class="note">Loading…</p></div>
+  </section>
+
+  <section class="block" id="map">
+    <div class="eyebrow">Live</div>
+    <h2>World map</h2>
+    <div class="mapcard" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;background:var(--panel);border:1px solid var(--line);padding:20px;backdrop-filter:blur(3px)">
+      <p style="margin:0;max-width:56ch;color:#c4bddc">Fly around the whole Nomadcraft world in 3D and see where everyone is right now: bases, builds and the shopping district.</p>
+      <a class="cta" href="http://170.23.116.193:8100/" target="_blank" rel="noopener">Open live map</a>
+    </div>
+  </section>
+
+  <section class="block" id="timeline">
+    <div class="eyebrow">Season 1</div>
+    <h2>Timeline</h2>
+    <ol class="tl" id="tl"><li class="empty"><strong>Loading timeline…</strong></li></ol>
+  </section>
+
+  <section class="block" id="mods">
+    <div class="eyebrow">Modpack</div>
+    <h2>Mods on the server</h2>
+    <div class="mods-bar"><input id="modSearch" type="search" placeholder="Search mods…" aria-label="Search mods"><span id="modsCount"></span></div>
+    <div class="mods" id="modsBody"><p class="note">Loading mods…</p></div>
+    <button class="cta ghost" id="modsMore" type="button" hidden>Show all</button>
+  </section>
+
+  <section class="block" id="shops">
+    <div class="eyebrow">Shopping district</div>
+    <h2>Shops</h2>
+    <div class="shops" id="shopsBody"><p class="note">Loading shops…</p></div>
+  </section>
+
+  <section class="block" id="gallery">
+    <div class="eyebrow">Screenshots</div>
+    <h2>Gallery</h2>
+    <div class="gallery" id="galleryBody"></div>
+  </section>
+
+  <footer>Nomadcraft SMP · Not affiliated with Mojang or Microsoft.</footer>
+</main>
+
+<dialog class="profile" id="profile" aria-labelledby="pfName">
+  <button class="pf-close" id="pfClose" type="button" aria-label="Close profile">×</button>
+  <div id="pf"></div>
+</dialog>
+
+<dialog class="lightbox" id="lightbox" aria-label="Screenshot">
+  <button class="lb-close" type="button" aria-label="Close">×</button>
+  <img alt="">
+  <p></p>
+</dialog>
+
+<script src="config.js"></script>
+<script src="shared.js"></script>
+<script src="app.js"></script>
+<script src="extras.js"></script>
+</body>
+</html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nomadcraft SMP</title>
+<meta name="description" content="Nomadcraft — a Minecraft Java survival SMP. Live server status, who's online, and the player leaderboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css">
 <link rel="icon" href="assets/logo.png">
 </head>
 <body>

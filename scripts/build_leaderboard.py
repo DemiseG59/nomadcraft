@@ -6,6 +6,11 @@ Expects a folder (default: mc/) containing what GitHub Actions downloaded from t
   mc/advancements/<uuid>.json
   mc/usercache.json
 If mc/stats is missing, the existing leaderboard.json is left as is.
+
+Seasons: season.json (repo root) holds the current season number and start time.
+When the season changes, everyone's current server stats are saved as a baseline
+(site/data/baseline.json) and the leaderboard only counts what happens after that.
+Advancements earned before the season start are ignored.
 """
 import argparse, json, os, sys
 from datetime import datetime, timezone
@@ -93,24 +98,75 @@ def adv_time(entry):
     return best
 
 
+BASE_CATS = ("minecraft:custom", "minecraft:mined", "minecraft:used", "minecraft:crafted",
+             "minecraft:killed", "minecraft:killed_by")
+
+
+def minus(st, base):
+    """Subtract a baseline from raw stats, never going below zero."""
+    out = {}
+    for cat, vals in st.items():
+        b = (base or {}).get(cat, {})
+        out[cat] = {k: max(0, v - b.get(k, 0)) for k, v in vals.items() if isinstance(v, (int, float))}
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mc", default="mc")
     ap.add_argument("--out", default="site/data/leaderboard.json")
     ap.add_argument("--fallback", default="")
+    ap.add_argument("--season", default="season.json")
+    ap.add_argument("--prev-baseline", default="")
+    ap.add_argument("--baseline-out", default="site/data/baseline.json")
     a = ap.parse_args()
+
+    season = load(a.season, {}) or {}
+    season_no = season.get("season", 1)
+    season_start = None
+    if season.get("start"):
+        season_start = datetime.fromisoformat(season["start"].replace("Z", "+00:00"))
+    prev_lb = (load(a.fallback) if a.fallback else None) or {}
+    same_season = prev_lb.get("season", 1) == season_no
 
     stats_dir = os.path.join(a.mc, "stats")
     if not os.path.isdir(stats_dir) or not any(f.endswith(".json") for f in os.listdir(stats_dir)):
-        prev = load(a.fallback) if a.fallback else None
+        prev = prev_lb if same_season else None
         if prev and prev.get("players"):
             os.makedirs(os.path.dirname(a.out), exist_ok=True)
             with open(a.out, "w", encoding="utf-8") as f:
                 json.dump(prev, f, indent=1)
             print("No stats downloaded; reusing the live leaderboard.")
+            prev_base = load(a.prev_baseline) if a.prev_baseline else None
+            if prev_base:
+                with open(a.baseline_out, "w", encoding="utf-8") as f:
+                    json.dump(prev_base, f, separators=(",", ":"))
+        elif not same_season:
+            os.makedirs(os.path.dirname(a.out), exist_ok=True)
+            with open(a.out, "w", encoding="utf-8") as f:
+                json.dump({"updated": None, "season": season_no, "players": []}, f)
+            print("No stats downloaded; new season, so the leaderboard starts empty.")
         else:
             print("No stats folder found; keeping the current leaderboard.json.")
         return 0
+
+    # Baseline for this season
+    prev_base = (load(a.prev_baseline, None) if a.prev_baseline else None) or {}
+    if prev_base.get("season") == season_no:
+        baseline = prev_base.get("players", {})
+        new_base = False
+    elif same_season and prev_lb.get("players") and season_no > 1:
+        print("The saved season baseline is missing; stopping so stats aren't wrongly reset.")
+        return 1
+    else:
+        baseline = {}
+        new_base = season_no > 1
+        if new_base:
+            for fn in os.listdir(stats_dir):
+                if fn.endswith(".json"):
+                    st = (load(os.path.join(stats_dir, fn), {}) or {}).get("stats", {})
+                    baseline[fn[:-5]] = {c: st.get(c, {}) for c in BASE_CATS if st.get(c)}
+            print(f"New season {season_no}: saved a baseline for {len(baseline)} players.")
 
     names = {}
     for e in load(os.path.join(a.mc, "usercache.json"), []) or []:
@@ -124,6 +180,14 @@ def main():
         uuid = fn[:-5]
         name = names.get(uuid, uuid[:8])
         st = (load(os.path.join(stats_dir, fn), {}) or {}).get("stats", {})
+        base = baseline.get(uuid)
+        if base:
+            pt = lambda d: d.get("minecraft:custom", {}).get("minecraft:play_time", d.get("minecraft:custom", {}).get("minecraft:play_one_minute", 0))
+            if pt(st) < pt(base):
+                base = None  # their stats were wiped on the server, so count from zero
+                baseline.pop(uuid, None)
+        if base:
+            st = minus(st, base)
         custom = st.get("minecraft:custom", {})
         mined = st.get("minecraft:mined", {})
         used = st.get("minecraft:used", {})
@@ -144,6 +208,8 @@ def main():
             if not isinstance(v, dict) or not v.get("done") or not k.startswith("minecraft:") or ":recipes/" in k or k.endswith("/root"):
                 continue
             t = adv_time(v)
+            if season_start and (t is None or t < season_start):
+                continue
             adv_list.append({"id": strip(k), "title": pretty(k), "time": t.isoformat() if t else None})
             if t and k in dict(FIRSTS):
                 cur = firsts.get(k)
@@ -205,12 +271,17 @@ def main():
     with open(a.out, "w", encoding="utf-8") as f:
         json.dump({
             "updated": datetime.now(timezone.utc).isoformat(),
+            "season": season_no,
+            "season_start": season.get("start"),
             "players": players,
             "timeline": timeline,
             "server": {"totals": totals, "death_causes": death_causes},
             "xp_weights": XP_WEIGHTS,
             "ranks": [{"level": lv, "name": nm} for lv, nm in RANKS],
         }, f, indent=1)
+    if season_no > 1:
+        with open(a.baseline_out, "w", encoding="utf-8") as f:
+            json.dump({"season": season_no, "players": baseline}, f, separators=(",", ":"))
     print(f"Wrote {len(players)} players and {len(timeline)} timeline events to {a.out}")
     return 0
 

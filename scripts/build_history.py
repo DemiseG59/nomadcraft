@@ -34,6 +34,11 @@ def main():
 
     prev = load(a.prev, {}) if a.prev else {}
     lb = load(a.lb, {})
+    season_no = lb.get("season", 1)
+    if prev.get("season", 1) != season_no:
+        # New season: keep the online-activity graph, wipe stat history and weekly results.
+        prev = {"activity": prev.get("activity", [])}
+        print(f"New season {season_no}: starting a fresh stat history.")
     status = load(a.status, {})
     players = lb.get("players") or []
 
@@ -85,6 +90,7 @@ def main():
 
     out = {
         "updated": now.isoformat(),
+        "season": season_no,
         "activity": activity,
         "snapshots": snapshots,
         "week": week,

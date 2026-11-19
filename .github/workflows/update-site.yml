@@ -36,13 +36,13 @@ jobs:
       - name: Read the current data from the live site
         run: |
           mkdir -p prev
-          for f in history mods leaderboard; do
+          for f in history mods leaderboard baseline; do
             code=$(curl -sS -L --retry 3 --retry-delay 5 -o "prev/$f.json" -w '%{http_code}' "$LIVE/data/$f.json?t=$(date +%s)" || echo 000)
             echo "$f.json -> $code"
             if [ "$code" != "200" ]; then
               rm -f "prev/$f.json"
-              if [ "$f" = "history" ] && [ "$code" != "404" ]; then
-                echo "Couldn't read the saved history, stopping so it isn't wiped."
+              if { [ "$f" = "history" ] || [ "$f" = "baseline" ]; } && [ "$code" != "404" ]; then
+                echo "Couldn't read the saved $f, stopping so it isn't wiped."
                 exit 1
               fi
             fi
@@ -91,7 +91,7 @@ jobs:
       - name: Build leaderboard
         run: |
           chmod -R u+rwX mc mods_new 2>/dev/null || true
-          python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json --fallback prev/leaderboard.json
+          python3 scripts/build_leaderboard.py --mc mc --out site/data/leaderboard.json --fallback prev/leaderboard.json --season season.json --prev-baseline prev/baseline.json
 
       - name: Build mod list
         continue-on-error: true

@@ -1,5 +1,6 @@
 {
   "season": 2,
-  "start": "2026-11-19T23:34:48Z",
-  "note": "To start a new season (reset everyone's stats on the site), raise the season number and set start to now."
+  "start": "2026-11-18T00:00:00Z",
+  "baseline": false,
+  "note": "Season 2 = the new world (fabric_26_3_3429160_4o3d6tja). For a new season on the same world: raise the season number, set start to now and remove the baseline line."
 }

@@ -168,6 +168,10 @@ def main():
                     baseline[fn[:-5]] = {c: st.get(c, {}) for c in BASE_CATS if st.get(c)}
             print(f"New season {season_no}: saved a baseline for {len(baseline)} players.")
 
+    if season.get("baseline") is False:
+        # New world: its stats already start from zero, so nothing to subtract.
+        baseline = {}
+
     names = {}
     for e in load(os.path.join(a.mc, "usercache.json"), []) or []:
         if isinstance(e, dict) and e.get("uuid") and e.get("name"):
